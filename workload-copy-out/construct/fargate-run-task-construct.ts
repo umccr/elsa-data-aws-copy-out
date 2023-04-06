@@ -95,9 +95,12 @@ export class FargateRunTaskConstruct extends Construct {
         subnetType: props.vpcSubnetSelection,
       },
       resultSelector: {
-        "capacityProviderName.$": JsonPath.stringAt("$.CapacityProviderName"),
-        "stoppedAt.$": JsonPath.numberAt("$.StoppedAt"),
-        "stoppedReason.$": JsonPath.stringAt("$.StoppedReason"),
+        // NOTE almost any amount of output can cause the joint result to overflow..
+        // best to look up all this data at the ECS Task level
+        // have left these here to show how you can export ECS output if you want
+        // "capacityProviderName.$": JsonPath.stringAt("$.CapacityProviderName"),
+        // "stoppedAt.$": JsonPath.numberAt("$.StoppedAt"),
+        // "stoppedReason.$": JsonPath.stringAt("$.StoppedReason"),
       },
       containerOverrides: [
         {

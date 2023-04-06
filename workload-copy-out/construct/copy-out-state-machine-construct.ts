@@ -43,7 +43,7 @@ export class CopyOutStateMachineConstruct extends Construct {
       "CanWrite",
       {
         vpc: props.vpc,
-        // WIP
+        vpcSubnetSelection: props.vpcSubnetSelection,
         requiredRegion: Stack.of(this).region,
       }
     );
@@ -53,6 +53,7 @@ export class CopyOutStateMachineConstruct extends Construct {
       "RcloneFargateTask",
       {
         fargateCluster: props.fargateCluster,
+        vpcSubnetSelection: props.vpcSubnetSelection,
       }
     ).ecsRunTask;
 
@@ -177,9 +178,11 @@ export class CopyOutStateMachineConstruct extends Construct {
       })
     );
 
+    // TODO tighten this
     this.stateMachine.role.addManagedPolicy(
       ManagedPolicy.fromAwsManagedPolicyName("AmazonS3FullAccess")
     );
+
     this.stateMachine.role.addManagedPolicy(
       ManagedPolicy.fromAwsManagedPolicyName("CloudWatchEventsFullAccess")
     );
