@@ -2,7 +2,7 @@ import { Construct } from "constructs";
 import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { Duration, Stack } from "aws-cdk-lib";
 import { LambdaInvoke } from "aws-cdk-lib/aws-stepfunctions-tasks";
-import { Code, Function, Runtime } from "aws-cdk-lib/aws-lambda";
+import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { IVpc, SubnetType } from "aws-cdk-lib/aws-ec2";
 import { JsonPath } from "aws-cdk-lib/aws-stepfunctions";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
@@ -10,6 +10,7 @@ import { join } from "path";
 
 type CanWriteLambdaStepProps = {
   vpc: IVpc;
+  vpcSubnetSelection: SubnetType;
 
   requiredRegion: string;
 };
@@ -27,10 +28,17 @@ export class CanWriteLambdaStepConstruct extends Construct {
 
     const canWriteLambda = new NodejsFunction(this, "CanWriteFunction", {
       vpc: props.vpc,
-      entry: join(__dirname, "can-write-lambda", "can-write-lambda.js"),
+      entry: join(
+        __dirname,
+        "..",
+        "..",
+        "artifacts",
+        "can-write-lambda",
+        "can-write-lambda.js"
+      ),
       handler: "handler",
       vpcSubnets: {
-        subnetType: SubnetType.PRIVATE_WITH_EGRESS,
+        subnetType: props.vpcSubnetSelection,
       },
       runtime: Runtime.NODEJS_18_X,
       // this seems like plenty of seconds to do a few API calls to S3

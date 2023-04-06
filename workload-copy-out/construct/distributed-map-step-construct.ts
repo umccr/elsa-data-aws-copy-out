@@ -1,43 +1,10 @@
 import { Construct } from "constructs";
-import { Effect, ManagedPolicy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import {
-  Chain,
-  Choice,
-  Condition,
   CustomState,
   IChainable,
-  IntegrationPattern,
   JsonPath,
   Map,
-  Pass,
-  StateMachine,
-  Succeed,
-  Wait,
-  WaitTime,
 } from "aws-cdk-lib/aws-stepfunctions";
-import { Arn, ArnFormat, Duration, Stack, Tags } from "aws-cdk-lib";
-import {
-  AssetImage,
-  CpuArchitecture,
-  FargatePlatformVersion,
-  FargateTaskDefinition,
-  ICluster,
-  LogDriver,
-} from "aws-cdk-lib/aws-ecs";
-import {
-  EcsFargateLaunchTargetOptions,
-  EcsLaunchTargetConfig,
-  EcsRunTask,
-  IEcsLaunchTarget,
-  LaunchTargetBindOptions,
-} from "aws-cdk-lib/aws-stepfunctions-tasks";
-import { RetentionDays } from "aws-cdk-lib/aws-logs";
-import { join } from "path";
-import { Service } from "aws-cdk-lib/aws-servicediscovery";
-import { Platform } from "aws-cdk-lib/aws-ecr-assets";
-import { Code, Runtime, Function } from "aws-cdk-lib/aws-lambda";
-import { CanWriteLambdaStepConstruct } from "./can-write-lambda-step-construct";
-import { IVpc, SubnetType } from "aws-cdk-lib/aws-ec2";
 
 type Props = {
   task: IChainable;
@@ -59,29 +26,22 @@ export class DistributedMapStepConstruct extends Construct {
     const mapItemProcessor = (dummyMap.toStateJson() as any).Iterator;
 
     // {
-    //     "BatchInput": {
-    //         "a": ""
+    //   "BatchInput": {
+    //     "destinationBucketForRclone": "s3:cpg-cardiac-flagship-transfer"
+    //   },
+    //   "Items": [
+    //     {
+    //       "source": "s3:bucket/1.fastq.gz"
     //     },
-    //     "Items": [
-    //         {
-    //             "bucket": "",
-    //             "key": ""
-    //         },
-    //         {
-    //             "bucket": "",
-    //             "key": ""
-    //         }
-    //     ]
+    //     {
+    //       "source": "s3:bucket/2.fastq.gz"
+    //     },
     // }
 
-    /*
-     {
-       "sourceFilesCsvBucket": "umccr-10c-data-dev",
-       "sourceFilesCsvKey": "manifest-copy-out-rclone-bucket-key.csv",
-       "destinationBucket": "elsa-data-replication-target-foo",
-       "maxItemsPerBatch": 10
-     }
-     */
+    // these names are internal only - but we pull out as a const to make sure
+    // they are consistent
+    const bucketColumnName = "b";
+    const keyColumnName = "k";
 
     this.distributedMapStep = new CustomState(this, "DistributedMap", {
       stateJson: {
@@ -90,13 +50,14 @@ export class DistributedMapStepConstruct extends Construct {
         // we need to be careful of the concurrency of the Fargate RunTask..
         // not sure distributed map knows how to handle back-off??
         // https://docs.aws.amazon.com/AmazonECS/latest/userguide/throttling.html
-        MaxConcurrency: 90,
+        MaxConcurrency: 80,
         ToleratedFailurePercentage: 25,
         ItemReader: {
           ReaderConfig: {
             InputType: "CSV",
+            // note we are providing the nominal column names.. there is no header row in the CSV
             CSVHeaderLocation: "GIVEN",
-            CSVHeaders: ["bucket", "key"],
+            CSVHeaders: [bucketColumnName, keyColumnName],
           },
           Resource: "arn:aws:states:::s3:getObject",
           Parameters: {
@@ -122,10 +83,10 @@ export class DistributedMapStepConstruct extends Construct {
         },
         ItemSelector: {
           "source.$": JsonPath.format(
-            // note: this is not a s3:// URL, it is the peculiar syntax used by rclone
+            // note: this is not an s3:// URL, it is the peculiar syntax used by rclone
             "s3:{}/{}",
-            JsonPath.stringAt("$$.Map.Item.Value.bucket"),
-            JsonPath.stringAt("$$.Map.Item.Value.key")
+            JsonPath.stringAt(`$$.Map.Item.Value.${bucketColumnName}`),
+            JsonPath.stringAt(`$$.Map.Item.Value.${keyColumnName}`)
           ),
         },
       },

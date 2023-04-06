@@ -12,12 +12,14 @@ import { Arn, ArnFormat, Duration, Stack } from "aws-cdk-lib";
 import { ICluster } from "aws-cdk-lib/aws-ecs";
 import { Service } from "aws-cdk-lib/aws-servicediscovery";
 import { CanWriteLambdaStepConstruct } from "./can-write-lambda-step-construct";
-import { IVpc } from "aws-cdk-lib/aws-ec2";
+import { IVpc, SubnetType } from "aws-cdk-lib/aws-ec2";
 import { DistributedMapStepConstruct } from "./distributed-map-step-construct";
 import { FargateRunTaskConstruct } from "./fargate-run-task-construct";
 
 export type CopyOutStateMachineProps = {
   vpc: IVpc;
+
+  vpcSubnetSelection: SubnetType;
 
   fargateCluster: ICluster;
 

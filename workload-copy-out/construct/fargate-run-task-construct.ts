@@ -1,20 +1,7 @@
 import { Construct } from "constructs";
-import { Effect, ManagedPolicy, PolicyStatement } from "aws-cdk-lib/aws-iam";
-import {
-  Chain,
-  Choice,
-  Condition,
-  CustomState,
-  IntegrationPattern,
-  JsonPath,
-  Map,
-  Pass,
-  StateMachine,
-  Succeed,
-  Wait,
-  WaitTime,
-} from "aws-cdk-lib/aws-stepfunctions";
-import { Arn, ArnFormat, Duration, Stack, Tags } from "aws-cdk-lib";
+import { ManagedPolicy } from "aws-cdk-lib/aws-iam";
+import { IntegrationPattern, JsonPath } from "aws-cdk-lib/aws-stepfunctions";
+import { Duration, Stack, Tags } from "aws-cdk-lib";
 import {
   AssetImage,
   CpuArchitecture,
@@ -32,16 +19,12 @@ import {
 } from "aws-cdk-lib/aws-stepfunctions-tasks";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { join } from "path";
-import { Service } from "aws-cdk-lib/aws-servicediscovery";
 import { Platform } from "aws-cdk-lib/aws-ecr-assets";
-import { Code, Runtime, Function } from "aws-cdk-lib/aws-lambda";
-import { CanWriteLambdaStepConstruct } from "./can-write-lambda-step-construct";
-import { IVpc, SubnetType } from "aws-cdk-lib/aws-ec2";
-import { DistributedMapStepConstruct } from "./distributed-map-step-construct";
-import { run } from "node:test";
+import { SubnetType } from "aws-cdk-lib/aws-ec2";
 
 type Props = {
   fargateCluster: ICluster;
+  vpcSubnetSelection: SubnetType;
 };
 
 export class FargateRunTaskConstruct extends Construct {
@@ -57,7 +40,7 @@ export class FargateRunTaskConstruct extends Construct {
       },
       cpu: 256,
       // there is a warning in the rclone documentation about problems with mem < 1GB - but I think that
-      // is mainly for large syncs.. we do individual file copies
+      // is mainly for large syncs.. we do individual file copies so 512 should be fine
       memoryLimitMiB: 512,
     });
 
@@ -78,9 +61,8 @@ export class FargateRunTaskConstruct extends Construct {
           __dirname,
           "..",
           "..",
-          "..",
-          "images",
-          "elsa-data-copy-out-rclone-batch-copy-docker-image"
+          "artifacts",
+          "rclone-batch-copy-docker-image"
         ),
         {
           // note we are forcing the X86 platform because we want to use Fargate spot which is only available intel/x86
@@ -110,7 +92,12 @@ export class FargateRunTaskConstruct extends Construct {
         platformVersion: FargatePlatformVersion.VERSION1_4,
       }),
       subnets: {
-        subnetType: SubnetType.PRIVATE_WITH_EGRESS,
+        subnetType: props.vpcSubnetSelection,
+      },
+      resultSelector: {
+        "capacityProviderName.$": JsonPath.stringAt("$.CapacityProviderName"),
+        "stoppedAt.$": JsonPath.numberAt("$.StoppedAt"),
+        "stoppedReason.$": JsonPath.stringAt("$.StoppedReason"),
       },
       containerOverrides: [
         {
@@ -161,3 +148,120 @@ class EcsFargateSpotOnlyLaunchTarget implements IEcsLaunchTarget {
     };
   }
 }
+
+/*
+An example output from an ECS runtask
+
+{
+  "Attachments": [
+    {
+      "Details": [
+        {
+          "Name": "subnetId",
+          "Value": "subnet-035b8252d7f6edee1"
+        },
+        {
+          "Name": "networkInterfaceId",
+          "Value": "eni-077e4eb4385083b95"
+        },
+        {
+          "Name": "macAddress",
+          "Value": "06:9a:85:f4:35:d8"
+        },
+        {
+          "Name": "privateDnsName",
+          "Value": "ip-10-0-64-84.ap-southeast-2.compute.internal"
+        },
+        {
+          "Name": "privateIPv4Address",
+          "Value": "10.0.64.84"
+        }
+      ],
+      "Id": "c06f9ba6-3cfb-472a-bbd2-a02cf5d3ef4d",
+      "Status": "DELETED",
+      "Type": "eni"
+    }
+  ],
+  "Attributes": [
+    {
+      "Name": "ecs.cpu-architecture",
+      "Value": "x86_64"
+    }
+  ],
+  "AvailabilityZone": "ap-southeast-2b",
+  "CapacityProviderName": "FARGATE_SPOT",
+  "ClusterArn": "arn:aws:ecs:ap-southeast-2:602836945884:cluster/ElsaDataAgCopyOutStack-FargateCluster7CCD5F93-Fqt1RPmV8sGS",
+  "Connectivity": "CONNECTED",
+  "ConnectivityAt": 1680596446117,
+  "Containers": [
+    {
+      "ContainerArn": "arn:aws:ecs:ap-southeast-2:602836945884:container/ElsaDataAgCopyOutStack-FargateCluster7CCD5F93-Fqt1RPmV8sGS/2696321ed56a477d9fc75f7e4f037ba2/3d49f64d-56af-4106-b027-40c1cd407b66",
+      "Cpu": "0",
+      "ExitCode": 0,
+      "GpuIds": [],
+      "Image": "602836945884.dkr.ecr.ap-southeast-2.amazonaws.com/cdk-hnb659fds-container-assets-602836945884-ap-southeast-2:307e4b58f91d748a9d6c233f7e04e6bcd5e19f27290a4481c2e007cc25a2ae93",
+      "ImageDigest": "sha256:REDACTED",
+      "LastStatus": "STOPPED",
+      "ManagedAgents": [],
+      "Name": "RcloneContainer",
+      "NetworkBindings": [],
+      "NetworkInterfaces": [
+        {
+          "AttachmentId": "c06f9ba6-3cfb-472a-bbd2-a02cf5d3ef4d",
+          "PrivateIpv4Address": "10.0.64.84"
+        }
+      ],
+      "RuntimeId": "ABCD-123",
+      "TaskArn": "arn:aws:ecs:ap-southeast-2:602836945884:task/ElsaDataAgCopyOutStack-FargateCluster7CCD5F93-Fqt1RPmV8sGS/2696321ed56a477d9fc75f7e4f037ba2"
+    }
+  ],
+  "Cpu": "256",
+  "CreatedAt": 1680596442871,
+  "DesiredStatus": "STOPPED",
+  "EnableExecuteCommand": false,
+  "EphemeralStorage": {
+    "SizeInGiB": 20
+  },
+  "ExecutionStoppedAt": 1680596471735,
+  "Group": "family:ElsaDataAgCopyOutStackCopyOutRcloneFargateTaskTdC05A385E",
+  "InferenceAccelerators": [],
+  "LastStatus": "STOPPED",
+  "LaunchType": "FARGATE",
+  "Memory": "512",
+  "Overrides": {
+    "ContainerOverrides": [
+      {
+        "Command": [
+          "s3:bucket:1.fastq.gz",
+          "s3:bucket:2.fastq.gz",
+          "s3:bucket:3.fastq.gz",
+          "s3:bucket:4.fastq.gz"
+        ],
+        "Environment": [
+          {
+            "Name": "destination",
+            "Value": "s3:bucket-at-destination"
+          }
+        ],
+        "EnvironmentFiles": [],
+        "Name": "RcloneContainer",
+        "ResourceRequirements": []
+      }
+    ],
+    "InferenceAcceleratorOverrides": []
+  },
+  "PlatformVersion": "1.4.0",
+  "PullStartedAt": 1680596461639,
+  "PullStoppedAt": 1680596463273,
+  "StartedAt": 1680596463814,
+  "StartedBy": "AWS Step Functions",
+  "StopCode": "EssentialContainerExited",
+  "StoppedAt": 1680596504771,
+  "StoppedReason": "Essential container in task exited",
+  "StoppingAt": 1680596481818,
+  "Tags": [],
+  "TaskArn": "arn:aws:ecs:ap-southeast-2:602836945884:task/ElsaDataAgCopyOutStack-FargateCluster7CCD5F93-Fqt1RPmV8sGS/2696321ed56a477d9fc75f7e4f037ba2",
+  "TaskDefinitionArn": "arn:aws:ecs:ap-southeast-2:602836945884:task-definition/ElsaDataAgCopyOutStackCopyOutRcloneFargateTaskTdC05A385E:1",
+  "Version": 5
+}
+ */

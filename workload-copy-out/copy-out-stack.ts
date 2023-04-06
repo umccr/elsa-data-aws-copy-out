@@ -1,4 +1,4 @@
-import { Stack } from "aws-cdk-lib";
+import { Stack, Tags } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { CopyOutStackProps } from "./copy-out-stack-props";
 import { Cluster } from "aws-cdk-lib/aws-ecs";
@@ -12,6 +12,8 @@ import {
 export class CopyOutStack extends Stack {
   constructor(scope: Construct, id: string, props: CopyOutStackProps) {
     super(scope, id, props);
+
+    Tags.of(this).add("umccr-org:Stack", id);
 
     const vpc = createVpcFromLookup(this, props.infrastructureStackName);
 
@@ -33,6 +35,7 @@ export class CopyOutStack extends Stack {
 
     const sm = new CopyOutStateMachineConstruct(this, "CopyOut", {
       vpc: vpc,
+      vpcSubnetSelection: props.infrastructureSubnetSelection,
       fargateCluster: cluster,
       namespaceService: service,
       aggressiveTimes: props.isDevelopment,
