@@ -1,10 +1,12 @@
-import { CopyOutStack } from "../workload-copy-out/copy-out-stack";
+import { CopyOutStack } from "../../workload-copy-out/copy-out-stack";
 import { SubnetType } from "aws-cdk-lib/aws-ec2";
 import { App } from "aws-cdk-lib";
 
 const app = new App();
 
-new CopyOutStack(app, "ElsaDataLocalDevTestCopyOutStack", {
+const localDevTestId = "ElsaDataLocalDevTestCopyOutStack";
+
+new CopyOutStack(app, localDevTestId, {
   // the stack can only be deployed to 'dev'
   env: {
     account: "843407916570",
@@ -12,20 +14,24 @@ new CopyOutStack(app, "ElsaDataLocalDevTestCopyOutStack", {
   },
   tags: {
     "umccr-org:Product": "ElsaData",
+    "umccr-org:Stack": localDevTestId,
   },
   isDevelopment: true,
   infrastructureStackName: "ElsaDataLocalDevTestInfrastructureStack",
   infrastructureSubnetSelection: SubnetType.PRIVATE_WITH_EGRESS,
 });
 
-new CopyOutStack(app, "ElsaDataAgCopyOutStack", {
-  // the stack can only be deployed to 'dev'
+const agId = "ElsaDataAgCopyOutStack";
+
+new CopyOutStack(app, agId, {
+  // the stack can only be deployed to 'ag'
   env: {
     account: "602836945884",
     region: "ap-southeast-2",
   },
   tags: {
     "umccr-org:Product": "ElsaData",
+    "umccr-org:Stack": agId,
   },
   isDevelopment: false,
   infrastructureStackName: "ElsaDataAustralianGenomicsInfrastructureStack",

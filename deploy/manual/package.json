@@ -1,0 +1,26 @@
+{
+  "name": "manual",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Manual deploy of stack into various accounts",
+  "scripts": {
+    "dev-deploy": "cdk --app 'npx ts-node stacks.ts' deploy ElsaDataLocalDevTestCopyOutStack",
+    "dev-destroy": "cdk --app 'npx ts-node stacks.ts' destroy ElsaDataLocalDevTestCopyOutStack",
+    "ag-deploy": "cdk --app 'npx ts-node stacks.ts' deploy ElsaDataAgCopyOutStack",
+    "ag-destroy": "cdk --app 'npx ts-node stacks.ts' destroy ElsaDataAgCopyOutStack"
+  },
+  "devDependencies": {
+    "@tsconfig/node18": "2.0.0",
+    "@types/node": "18.16.2",
+    "aws-cdk": "2.77.0",
+    "prettier": "2.8.8",
+    "ts-node": "10.9.1",
+    "typescript": "5.0.4"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.77.0",
+    "constructs": "10.2.9",
+    "esbuild": "0.17.18",
+    "source-map-support": "0.5.21"
+  }
+}
