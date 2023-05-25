@@ -6,8 +6,10 @@
   "scripts": {
     "dev-deploy": "cdk --app 'npx ts-node stacks.ts' deploy ElsaDataLocalDevTestCopyOutStack",
     "dev-destroy": "cdk --app 'npx ts-node stacks.ts' destroy ElsaDataLocalDevTestCopyOutStack",
-    "ag-deploy": "cdk --app 'npx ts-node stacks.ts' deploy ElsaDataAgCopyOutStack",
-    "ag-destroy": "cdk --app 'npx ts-node stacks.ts' destroy ElsaDataAgCopyOutStack"
+    "agdemo-deploy": "cdk --app 'npx ts-node stacks.ts' deploy ElsaDataDemoAustralianGenomicsCopyOutStack",
+    "agdemo-destroy": "cdk --app 'npx ts-node stacks.ts' destroy ElsaDataDemoAustralianGenomicsCopyOutStack",
+    "ag-deploy": "cdk --app 'npx ts-node stacks.ts' deploy ElsaDataAustralianGenomicsCopyOutStack",
+    "ag-destroy": "cdk --app 'npx ts-node stacks.ts' destroy ElsaDataAustralianGenomicsCopyOutStack"
   },
   "devDependencies": {
     "@tsconfig/node18": "2.0.0",
