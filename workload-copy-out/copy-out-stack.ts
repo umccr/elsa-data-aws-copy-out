@@ -13,8 +13,6 @@ export class CopyOutStack extends Stack {
   constructor(scope: Construct, id: string, props: CopyOutStackProps) {
     super(scope, id, props);
 
-    Tags.of(this).add("umccr-org:Stack", id);
-
     const vpc = createVpcFromLookup(this, props.infrastructureStackName);
 
     const namespace = createNamespaceFromLookup(
@@ -29,8 +27,8 @@ export class CopyOutStack extends Stack {
 
     const service = new Service(this, "Service", {
       namespace: namespace,
-      name: "ElsaDataCopyOut",
-      description: "Parallel S3 file copying service",
+      name: "CopyOut",
+      description: "Parallel file copying service",
     });
 
     const sm = new CopyOutStateMachineConstruct(this, "CopyOut", {
