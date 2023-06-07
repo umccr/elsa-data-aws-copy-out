@@ -39,7 +39,7 @@ const app = new App();
     isDevelopment: false,
     infrastructureStackName:
       "ElsaDataDemoAustralianGenomicsInfrastructureStack",
-    infrastructureSubnetSelection: SubnetType.PRIVATE_ISOLATED,
+    infrastructureSubnetSelection: SubnetType.PRIVATE_WITH_EGRESS,
   });
 }
 
@@ -58,6 +58,6 @@ const app = new App();
     },
     isDevelopment: false,
     infrastructureStackName: "ElsaDataAustralianGenomicsInfrastructureStack",
-    infrastructureSubnetSelection: SubnetType.PRIVATE_ISOLATED,
+    infrastructureSubnetSelection: SubnetType.PRIVATE_WITH_EGRESS,
   });
 }
