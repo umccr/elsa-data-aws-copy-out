@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "description": "Manual deploy of stack into various accounts",
   "scripts": {
-    "dev-deploy": "cdk --app 'npx ts-node stacks.ts' deploy ElsaDataLocalDevTestCopyOutStack",
-    "dev-destroy": "cdk --app 'npx ts-node stacks.ts' destroy ElsaDataLocalDevTestCopyOutStack",
+    "dev-deploy": "cdk --app 'npx ts-node stacks.ts' deploy ElsaDataDevCopyOutStack",
+    "dev-destroy": "cdk --app 'npx ts-node stacks.ts' destroy ElsaDataDevCopyOutStack",
     "agdemo-deploy": "cdk --app 'npx ts-node stacks.ts' deploy ElsaDataDemoAustralianGenomicsCopyOutStack",
     "agdemo-destroy": "cdk --app 'npx ts-node stacks.ts' destroy ElsaDataDemoAustralianGenomicsCopyOutStack",
     "ag-deploy": "cdk --app 'npx ts-node stacks.ts' deploy ElsaDataAustralianGenomicsCopyOutStack",
