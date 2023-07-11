@@ -4,10 +4,13 @@ import { App } from "aws-cdk-lib";
 
 const app = new App();
 
-{
-  const localDevTestId = "ElsaDataLocalDevTestCopyOutStack";
+const description =
+  "Bulk copy-out service for Elsa Data - an application for controlled genomic data sharing";
 
-  new CopyOutStack(app, localDevTestId, {
+{
+  const devId = "ElsaDataDevCopyOutStack";
+
+  new CopyOutStack(app, devId, {
     // the stack can only be deployed to 'dev'
     env: {
       account: "843407916570",
@@ -15,10 +18,11 @@ const app = new App();
     },
     tags: {
       "umccr-org:Product": "ElsaData",
-      "umccr-org:Stack": localDevTestId,
+      "umccr-org:Stack": devId,
     },
+    description: description,
     isDevelopment: true,
-    infrastructureStackName: "ElsaDataLocalDevTestInfrastructureStack",
+    infrastructureStackName: "ElsaDataDevInfrastructureStack",
     infrastructureSubnetSelection: SubnetType.PRIVATE_WITH_EGRESS,
   });
 }
@@ -36,6 +40,7 @@ const app = new App();
       "umccr-org:Product": "ElsaData",
       "umccr-org:Stack": agDemoId,
     },
+    description: description,
     isDevelopment: false,
     infrastructureStackName:
       "ElsaDataDemoAustralianGenomicsInfrastructureStack",
@@ -56,6 +61,7 @@ const app = new App();
       "umccr-org:Product": "ElsaData",
       "umccr-org:Stack": agId,
     },
+    description: description,
     isDevelopment: false,
     infrastructureStackName: "ElsaDataAustralianGenomicsInfrastructureStack",
     infrastructureSubnetSelection: SubnetType.PRIVATE_WITH_EGRESS,
